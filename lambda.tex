@@ -1,0 +1,236 @@
+\documentclass[a4paper]{book}
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+
+\title{Notes on Type Theory}
+\author{Poscat}
+\date{}
+
+\pagestyle{fancy}
+\lhead{Notes on Type Theory}
+\rhead{\thepage}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{theorem}[lemma]{Theorem}
+\newtheorem{notation}{Notation}[section]
+\newtheorem{conv}{Convention}[section]
+
+\newcommand{\sub}[1]{\texttt{Sub}(#1)}
+\newcommand{\lterm}{$\lambda$-term }
+\newcommand{\aconv}{\(\alpha\)-conversion}
+\newcommand{\aeq}{=_\alpha}
+\newcommand{\bred}{\(\beta\)-reduction}
+\newcommand{\bconv}{\(\beta\)-conversion}
+\newcommand{\bnf}{\(\beta\)-nf}
+\newcommand{\beq}{=_\beta}
+\newcommand{\obr}{\rightarrow_\beta}
+\newcommand{\mbr}{\twoheadrightarrow_\beta}
+
+\setenumerate[1]{label={(\arabic*)}}
+
+\begin{document}
+\maketitle
+{\Large This is the notes on \textit{Type Theory and Formal Proof} taken by Poscat\\
+  It is only intended to help me memorizing the concepts of type theory as no
+  additional explanations will be provided}
+\chapter{Untyped Lambda Calculus}
+\section{Basic Definitions}
+Untyped lambda calculus was invented by Church to capture the idea of ``computation" by
+abstracing the operations on functions, namely application and abstraction.\\
+We assume that there exist a set of all variables $V$, then we can build the set of all
+lambda terms $\Lambda$ inductively from these variables.
+\begin{definition}
+  $\lambda$-terms, the set of all $\lambda$-terms $\Lambda$
+  \begin{enumerate}
+    \item (var) \text{if $u \in V$ then $u \in \Lambda$}
+    \item (appl) \text{if $M \in \Lambda$ and $N \in \Lambda$ then $M N \in \Lambda$}
+    \item (abst) \text{if $x \in V$ and $M \in \Lambda$ then $\lambda x. M \in \Lambda$}
+  \end{enumerate}
+\end{definition}
+\begin{notation}
+  (representation of $\lambda$-terms)\\
+  We use lower case letters and their subscripted variants to represent variables,\\
+  Upper case letters to represent $\lambda$-terms.\\
+  \textit{Syntatically identical} $\lambda$-terms will be denoted by the triple bar symbol $\equiv$
+\end{notation}
+\begin{definition}
+  subterms; \texttt{Sub}\\
+  \begin{enumerate}
+    \item \texttt{Sub}$(x) = \{x\}$, for each $x \in V$
+    \item \texttt{Sub}$(M N) = \texttt{Sub}(M) \cup \texttt{Sub}(N)$ if $M \in \Lambda$ and $N \in \Lambda$
+    \item \texttt{Sub}$(\lambda x.\ M)$ = \texttt{Sub}$(M)\setminus {x}$ if $M \in \Lambda$
+  \end{enumerate}
+\end{definition}
+\begin{lemma}
+  \begin{enumerate}
+    \item (Reflextivity) For all $\lambda$-terms $M$, $M \in \sub{M}$
+    \item (Transitivity) if $L \in \sub{M}$ and $M \in \sub{L}$ then $L \in \sub{L}$
+  \end{enumerate}
+\end{lemma}
+\begin{definition}
+  proper subterm\\
+  $L$ is a proper subterm of $M$ iff $L \in \sub{M}$ and $L \not\equiv M$
+\end{definition}
+\begin{notation}
+  \begin{itemize}
+    \item[-] the outer most parenthese can be omitted
+    \item[-] function applications are left associative
+    \item[-] function abstractions are right associative
+    \item[-] function applications have higher precedence than abstractions
+  \end{itemize}
+\end{notation}
+\section{Free variables}
+Variables in a $\lambda$-term can be categorized into 3 categories, free variables, binding variables and bound variables
+\begin{definition}
+  FV, free variables in a $\lambda$-term\\
+  \begin{enumerate}
+    \item (Variable) $FV(x) = \{x\}$,
+    \item (Application) $FV(M N) = FV(M) \cup FV(N)$,
+    \item (Abstraction) $FV(\lambda x.\ M) = FV(M) \setminus \{x\}$
+  \end{enumerate}
+\end{definition}
+\begin{definition}
+  Closed $\lambda$-terms\\
+  A $\lambda$-term $M$ is closed iff $FV(M) = \emptyset$. A closed \lterm is also called a \textit{combinator}.
+  The set of all closed \lterm s is denoted by $\Lambda^0$.
+\end{definition}
+\section{$\alpha$-conversion}
+Renaming variables in lambda calculus is important as we don't want free variables to be accidentally captured
+while substituting. We formalize this process with a relation called $\alpha$-conversion or $\alpha$-equivalence.
+\begin{definition}
+  (Renaming; $M^{x \rightarrow y}$, $=_\alpha$)\\
+  \begin{enumerate}
+    \item (Renaming) $\lambda x.\ M =_\alpha \lambda y.\ M^{x \rightarrow y}$ if $y \notin FV(M)$ and $y$ is not a binding varaible in M, where $M^{x \rightarrow y}$
+          denotes every free $x$ in $M$ being replaced by $y$
+    \item (Compatibility) if \(M =_\alpha N\) then \(L M =_\alpha L N\), \(M L =_\alpha N L\) and \(\lambda z.\ M =_\alpha \lambda z.\ N\)
+    \item (Symmetry) if \(M =_\alpha N\) then \(N =_\alpha M\)
+    \item (Reflextivity) \(M =_\alpha M\)
+    \item (Transitivity) if \(L =_\alpha M\) and \(M =_\alpha N\) then \(L =_\alpha N\)
+  \end{enumerate}
+\end{definition}
+\begin{definition}
+  (\(\alpha\)-equivalent; \(\alpha\)-convertible; \(\alpha\)-variant)\\
+  If \(M =_\alpha N\) then \(M\) and \(N\) are \(\alpha\)-\textit{convertible} or \(\alpha\)-\textit{equivalent}, \(M\) is a \(\alpha\)-\textit{variant} of \(N\)
+\end{definition}
+\begin{lemma}
+  Let \(M_1 =_\alpha N_1 and M_2 =_\alpha N_2\). Then:
+  \begin{enumerate}
+    \item \(M_1 N_1 =_\alpha M_2 N_2\)
+    \item \(\lambda x\ldotp M_1 =_\alpha \lambda x\ldotp N_1\)
+    \item \(M_1[x := N_1] \equiv M_2[x := N_2]\)
+  \end{enumerate}
+\end{lemma}
+\begin{conv}
+  We identify \(\alpha\)-convertible terms, that is, \(M \equiv N\) if \(M =_\alpha N\)
+\end{conv}
+\section{Substitution}
+In order to define \(\beta\)-reduction, we must define substitution first.
+\begin{definition}
+  (Subsititution)
+  \begin{enumerate}
+    \item[(1a)] \(x[x := N] \equiv N\)
+    \item[(1b)] \(y[x := N] \equiv y\) if \(x \not\equiv y\)
+    \item[(2)]  \((PQ)[x := N] \equiv (P[x := N])(Q[x := N])\)
+    \item[(3)]  \((\lambda y\ldotp P)[x := N] \equiv \lambda z\ldotp (P^{y \rightarrow z}[x := N])\) if \(\lambda z\ldotp P^{y \rightarrow z}\)
+          is an \(\alpha\)-variant of \(\lambda y.\ P\) such that \(z \notin FV(N)\)
+  \end{enumerate}
+\end{definition}
+\section{\(\beta\)-reduction}
+\begin{definition}
+  (One step \(\beta\)-reduction, \(\rightarrow_\beta\))
+  \begin{enumerate}
+    \item (Basis) \((\lambda x\ldotp M) N \obr M[x := N]\)
+    \item (Compatibility) if  \(M \obr N\) then \(L M \obr L N\), \(M L \obr N L\) and \(\lambda x\ldotp M \obr \lambda x\ldotp N\)
+  \end{enumerate}
+\end{definition}
+\begin{definition}
+  A term of the form \((\lambda x\ldotp M) N\) is called a \textit{redex} (\textit{red}ucible \textit{ex}pression)\\
+  \(M[x := N]\) is called the \textit{contractum} of the redex
+\end{definition}
+\begin{definition}
+  (zero-or-more-step \bred, \(\mbr\))\\
+  \(M \mbr N\) if there is an \(n \geq 0\) and there are terms
+  \(M_0\) to \(M_n\) such that \(M_0 \equiv M\), \(M_n \equiv N\)
+  and for all \(i\) such that \(0 \leq i \leq n\) : \[
+    M_i \obr M_{i+1}
+    .\]
+\end{definition}
+\begin{lemma}
+  \begin{enumerate}
+    \item \(\mbr\) extends \(\obr\)
+    \item \(\mbr\) is reflexive and transitive
+  \end{enumerate}
+\end{lemma}
+\begin{definition}
+  (\bconv, \(\beta\)-equality, \(\beq\))\\
+  \(M \beq N\) if there is an \(n \geq  0\) and there are terms
+  \(M_0\) to \(M_n\) such that \(M_0 \equiv M\), \(M_n \equiv N\)
+  and for all \(i\) such that \(0 \leq i \leq n\) : \[
+    \text{either }M_i \obr M_{i+1}\text{ or }M_{i+1} \obr M_i
+    .\]
+\end{definition}
+\begin{lemma}
+  \begin{enumerate}
+    \item \(\beq\) extends \(\mbr\) in both directions
+    \item \(\beq\) is a equivalence relation (reflexive,
+          symmetric, transitive)
+  \end{enumerate}
+\end{lemma}
+\section{Normal forms and confluence}
+\begin{definition}
+  (\(\beta\)-normal form; \(\beta\)-nf; \(\beta\)-normalizing)
+  \begin{enumerate}
+    \item \(M\) is in \(\beta\)-normal form if \(M\) does not
+          contain any redex.
+    \item \(M\) has \(\beta\)-normal form if there is an
+          \(N\) in \(\beta\)-nf such that \(M \beq N\).
+          Such an \(N\) \textit{is a \(beta\)-normal from} of \(M\)
+  \end{enumerate}
+\end{definition}
+Define \(\Omega := (\lambda x\ldotp x\, x)(\lambda x\ldotp xx)\), then it
+does not have a \(\beta\)-nf.
+\begin{lemma}
+  When \(M\) is in \(\beta\)-nf, then \(M \mbr N\) implies
+  \(M \equiv N\)
+\end{lemma}
+\begin{definition}
+  (Reduction path)
+  \begin{enumerate}
+    \item A \textit{finite reduction path} from \(M\) is a finite
+          sequence of terms \(N_0, N_1, N_2, \ldots, N_n\) such that
+          \(N_0 \equiv M\) and \(N_i \obr N_{i+1}\) for each
+          \(0 \leq i \leq n\).
+    \item A \textit{infinite reduction path} from \(M\) is an
+          infinite sequence \(N_0, N_1, \ldots\) with \(N_0 \equiv M\)
+          and \(N_i \obr N_{i+1}\) for each \(i \in \mathbb{N}\).
+  \end{enumerate}
+\end{definition}
+\begin{definition}
+  (Weak normalization, strong normalization)
+  \begin{enumerate}
+    \item \(M\) is \textit{weakly normalizing} if there is an \(N\)
+          in \(\beta\)-normal form such that \(M \mbr N\)
+    \item \(M\) is \textit{stronly normalizing} if there are
+          no infinite reduction paths starting from \(M\)
+  \end{enumerate}
+\end{definition}
+\begin{theorem}
+  (\textit{Church-Rosser; CR; Confluence})\\
+  Suppose for a given \lterm \(M\), we have \(M \mbr N_1\) and
+  \(M \mbr N_2\), then there exists a \lterm \(N_3\) such that
+  \(N_1 \mbr N_3\) and \(N_2 \mbr N_3\).
+\end{theorem}
+\begin{lemma}
+  if \(M \beq N\), then there exists a \lterm  \(L_1\) such that 
+  \(M \mbr L_1\) and \(N \mbr L_1\).
+\end{lemma}
+\begin{lemma}
+  \begin{enumerate}
+    \item if \(M\) has \(N\) as a \bnf, then \(M \mbr N\)
+    \item A \lterm has at most one \bnf
+  \end{enumerate}
+\end{lemma}
+\end{document}
